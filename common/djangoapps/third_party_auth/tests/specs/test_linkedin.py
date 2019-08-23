@@ -5,6 +5,7 @@ from third_party_auth.tests.specs import base
 
 
 def get_localized_name(name):
+    """Returns the localizedName from the name object"""
     locale = "{}_{}".format(
         name["preferredLocale"]["language"],
         name["preferredLocale"]["country"]
