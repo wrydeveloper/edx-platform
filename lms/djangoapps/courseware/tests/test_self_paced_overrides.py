@@ -19,7 +19,9 @@ from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 
 @override_settings(
     XBLOCK_FIELD_DATA_WRAPPERS=['lms.djangoapps.courseware.field_overrides:OverrideModulestoreFieldData.wrap'],
-    MODULESTORE_FIELD_OVERRIDE_PROVIDERS=['courseware.self_paced_overrides.SelfPacedDateOverrideProvider'],
+    MODULESTORE_FIELD_OVERRIDE_PROVIDERS=[
+        'lms.djangoapps.courseware.self_paced_overrides.SelfPacedDateOverrideProvider'
+    ],
 )
 class SelfPacedDateOverrideTest(ModuleStoreTestCase):
     """
