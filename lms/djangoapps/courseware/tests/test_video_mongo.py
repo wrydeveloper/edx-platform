@@ -1689,7 +1689,9 @@ class VideoBlockTest(TestCase, VideoBlockTestBase):
         # Also verify the content of created transcript file.
         expected_transcript_content = File(open(expected_transcript_path)).read()
         transcript = get_video_transcript_data(video_id=self.descriptor.edx_video_id, language_code=language_code)
-        self.assertEqual(transcript['content'], expected_transcript_content)
+
+        content = transcript['content'].decode('utf-8') if six.PY3 else transcript['content']
+        self.assertEqual(content, expected_transcript_content)
 
     @ddt.data(
         (['en', 'da'], 'test_sub', ''),
@@ -1749,7 +1751,9 @@ class VideoBlockTest(TestCase, VideoBlockTestBase):
             )
             expected_transcript_content = File(open(expected_transcript_path)).read()
             transcript = get_video_transcript_data(video_id=self.descriptor.edx_video_id, language_code=language)
-            self.assertEqual(transcript['content'], expected_transcript_content)
+
+            content = transcript['content']
+            self.assertEqual(content.decode('utf-8') if six.PY3 else content, expected_transcript_content)
 
     def test_export_val_data_not_found(self):
         """
