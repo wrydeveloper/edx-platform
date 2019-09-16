@@ -1,14 +1,11 @@
 """ Management command to link program enrollments and external student_keys to an LMS user """
 from __future__ import absolute_import, unicode_literals
 
-import logging
-
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from lms.djangoapps.program_enrollments.api import link_program_enrollments_to_lms_users
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 INCORRECT_PARAMETER_TEMPLATE = (

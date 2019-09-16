@@ -22,7 +22,7 @@ from pytz import UTC
 from common.test.utils import disable_signal
 from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
-from lms.djangoapps.program_enrollments.api import NO_PROGRAM_ENROLLMENT_TEMPLATE
+from lms.djangoapps.program_enrollments.api.linking import NO_PROGRAM_ENROLLMENT_TEMPLATE
 from lms.djangoapps.verify_student.models import VerificationDeadline
 from student.models import ENROLLED_TO_ENROLLED, CourseEnrollment, CourseEnrollmentAttribute, ManualEnrollmentAudit
 from student.roles import GlobalStaff, SupportStaffRole

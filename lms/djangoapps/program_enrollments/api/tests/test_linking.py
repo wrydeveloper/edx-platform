@@ -15,11 +15,10 @@ from openedx.core.djangoapps.content.course_overviews.tests.factories import Cou
 from student.tests.factories import UserFactory
 
 from ..linking import (
-    COURSE_ENROLLMENT_ERR_TEMPLATE,
     NO_LMS_USER_TEMPLATE,
     NO_PROGRAM_ENROLLMENT_TEMPLATE,
-    link_program_enrollments_to_lms_users,
-    user_already_linked_message
+    _user_already_linked_message,
+    link_program_enrollments_to_lms_users
 )
 
 LOG_PATH = 'lms.djangoapps.program_enrollments.api.linking'
@@ -123,15 +122,6 @@ class TestLinkProgramEnrollmentsMixin(object):
             [course_enrollment.course.id for course_enrollment in course_enrollments]
         )
 
-    def _assert_error_message(self, errors, error_key, logger, log_level, expected_error_msg):
-        logger.check_present((LOG_PATH, log_level, expected_error_msg))
-        self.assertDictEqual(
-            {
-                error_key: expected_error_msg
-            },
-            errors
-        )
-
 
 class TestLinkProgramEnrollments(TestLinkProgramEnrollmentsMixin, TestCase):
     """ Tests for linking behavior """
@@ -222,7 +212,7 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
             )
             logger.check_present((LOG_PATH, 'WARNING', expected_error_msg))
 
-        self.assertDictEqual(errors, {('0002', self.user_2.username): expected_error_msg})
+        self.assertDictEqual(errors, {'0002': expected_error_msg})
         self._assert_program_enrollment(self.user_1, self.program, '0001')
         self._assert_no_program_enrollment(self.user_2, self.program)
 
@@ -241,7 +231,7 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
             expected_error_msg = NO_LMS_USER_TEMPLATE.format('nonexistant-user')
             logger.check_present((LOG_PATH, 'WARNING', expected_error_msg))
 
-        self.assertDictEqual(errors, {('0002', 'nonexistant-user'): expected_error_msg})
+        self.assertDictEqual(errors, {'0002': expected_error_msg})
         self._assert_program_enrollment(self.user_1, self.program, '0001')
         self._assert_no_user(enrollment_2)
 
@@ -263,10 +253,10 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
                     '0002': self.user_2.username
                 }
             )
-            expected_error_msg = user_already_linked_message(program_enrollment, self.user_2)
+            expected_error_msg = _user_already_linked_message(program_enrollment, self.user_2)
             logger.check_present((LOG_PATH, 'WARNING', expected_error_msg))
 
-        self.assertDictEqual(errors, {('0002', self.user_2.username): expected_error_msg})
+        self.assertDictEqual(errors, {'0002': expected_error_msg})
         self._assert_program_enrollment(self.user_1, self.program, '0001')
         self._assert_program_enrollment(self.user_2, self.program, '0002')
 
@@ -290,10 +280,10 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
                     '0003': self.user_2.username,
                 }
             )
-            expected_error_msg = user_already_linked_message(enrollment, self.user_2)
+            expected_error_msg = _user_already_linked_message(enrollment, self.user_2)
             logger.check_present((LOG_PATH, 'WARNING', expected_error_msg))
 
-        self.assertDictEqual(errors, {('0003', self.user_2.username): expected_error_msg})
+        self.assertDictEqual(errors, {'0003': expected_error_msg})
         self._assert_program_enrollment(self.user_1, self.program, '0001')
         self._assert_no_program_enrollment(self.user_2, self.program)
         self._assert_program_enrollment(user_3, self.program, '0003')
@@ -313,22 +303,14 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
         self._create_waiting_course_enrollment(program_enrollment_2, self.fruit_course)
         self._create_waiting_course_enrollment(program_enrollment_2, self.animal_course)
 
-        msg = COURSE_ENROLLMENT_ERR_TEMPLATE.format(
-            user=self.user_1.username, course=nonexistant_course
+        errors = link_program_enrollments_to_lms_users(
+            self.program,
+            {
+                '0001': self.user_1.username,
+                '0002': self.user_2.username
+            }
         )
-        with LogCapture() as logger:
-            errors = link_program_enrollments_to_lms_users(
-                self.program,
-                {
-                    '0001': self.user_1.username,
-                    '0002': self.user_2.username
-                }
-            )
-            logger.check_present((LOG_PATH, 'ERROR', msg))
-
-        self.assertDictEqual(
-            errors, {('0001', self.user_1.username): 'NonExistentCourseError: ' + msg}
-        )
+        self.assertIn(errors['0001'], 'NonExistentCourseError: ')
         self._assert_no_program_enrollment(self.user_1, self.program)
         self._assert_no_user(program_enrollment_1)
         course_enrollment_1.refresh_from_db()
@@ -348,19 +330,16 @@ class TestLinkProgramEnrollmentsErrors(TestLinkProgramEnrollmentsMixin, TestCase
         program_enrollment_1 = self._create_waiting_enrollment(self.program, '0001')
         self._create_waiting_enrollment(self.program, '0002')
 
-        msg = 'Integrity error while linking program enrollments'
-        with LogCapture() as logger:
-            errors = link_program_enrollments_to_lms_users(
-                self.program,
-                {
-                    '0001': self.user_1.username,
-                    '0002': self.user_2.username,
-                }
-            )
-            logger.check_present((LOG_PATH, 'ERROR', msg))
+        errors = link_program_enrollments_to_lms_users(
+            self.program,
+            {
+                '0001': self.user_1.username,
+                '0002': self.user_2.username,
+            }
+        )
 
         self.assertEqual(len(errors), 1)
-        self.assertIn('UNIQUE constraint failed', errors[('0001', self.user_1.username)])
+        self.assertIn('UNIQUE constraint failed', errors['0001'])
         self._assert_no_user(program_enrollment_1)
         self._assert_program_enrollment(self.user_2, self.program, '0002')
 
