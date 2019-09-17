@@ -16,17 +16,35 @@ from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 
 
 @ddt.ddt
-class GradesServiceTests(ModuleStoreTestCase):
+class OverrideSubsectionGradeTests(ModuleStoreTestCase):
     """
-    Tests for the Grades service
+    Tests for the override subsection grades api call
     """
 
+    @classmethod
+    def setUpTestData(cls):
+        super(OverrideSubsectionGradeTests, cls).setUpTestData()
+        cls.user = UserFactory()
+        cls.overriding_user = UserFactory()
+        cls.signal_patcher = patch('lms.djangoapps.grades.signals.signals.SUBSECTION_OVERRIDE_CHANGED.send')
+        cls.signal_patcher.start()
+        cls.id_patcher = patch('lms.djangoapps.grades.api.create_new_event_transaction_id')
+        cls.mock_create_id = cls.id_patcher.start()
+        cls.mock_create_id.return_value = 1
+        cls.type_patcher = patch('lms.djangoapps.grades.api.set_event_transaction_type')
+        cls.type_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(OverrideSubsectionGradeTests, cls).tearDownClass()
+        cls.signal_patcher.stop()
+        cls.id_patcher.stop()
+        cls.type_patcher.stop()
+
     def setUp(self):
-        super(GradesServiceTests, self).setUp()
+        super(OverrideSubsectionGradeTests, self).setUp()
         self.course = CourseFactory.create(org='edX', number='DemoX', display_name='Demo_Course', run='Spring2019')
         self.subsection = ItemFactory.create(parent=self.course, category="subsection", display_name="Subsection")
-        self.user = UserFactory()
-        self.overriding_user = UserFactory()
         self.grade = PersistentSubsectionGrade.update_or_create_grade(
             user_id=self.user.id,
             course_id=self.course.id,
@@ -38,20 +56,10 @@ class GradesServiceTests(ModuleStoreTestCase):
             earned_graded=5.0,
             possible_graded=5.0
         )
-        self.signal_patcher = patch('lms.djangoapps.grades.signals.signals.SUBSECTION_OVERRIDE_CHANGED.send')
-        self.mock_signal = self.signal_patcher.start()
-        self.id_patcher = patch('lms.djangoapps.grades.api.create_new_event_transaction_id')
-        self.mock_create_id = self.id_patcher.start()
-        self.mock_create_id.return_value = 1
-        self.type_patcher = patch('lms.djangoapps.grades.api.set_event_transaction_type')
-        self.mock_set_type = self.type_patcher.start()
 
     def tearDown(self):
-        super(GradesServiceTests, self).tearDown()
+        super(OverrideSubsectionGradeTests, self).tearDown()
         PersistentSubsectionGradeOverride.objects.all().delete()  # clear out all previous overrides
-        self.signal_patcher.stop()
-        self.id_patcher.stop()
-        self.type_patcher.stop()
 
     @ddt.data(0.0, None, 3.0)
     def test_override_subsection_grade(self, earned_graded):

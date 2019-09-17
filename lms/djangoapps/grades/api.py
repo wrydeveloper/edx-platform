@@ -7,11 +7,9 @@ from __future__ import absolute_import, unicode_literals
 from datetime import datetime
 
 import pytz
-from crum import get_current_user
 from django.core.exceptions import ObjectDoesNotExist
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from six import text_type
-
 
 # Public Grades Modules
 from lms.djangoapps.grades import constants, context, course_data, events

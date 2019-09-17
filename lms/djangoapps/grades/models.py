@@ -677,10 +677,6 @@ class PersistentSubsectionGradeOverride(models.Model):
     if 'grades' in apps.app_configs:
         history = HistoricalRecords()
 
-    def __init__(self, *args, **kwargs):
-        super(PersistentSubsectionGradeOverride, self).__init__(*args, **kwargs)
-        self.overriding_user = None
-
     def __unicode__(self):
         return u', '.join([
             u"{}".format(type(self).__name__),
