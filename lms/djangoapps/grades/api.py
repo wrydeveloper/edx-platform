@@ -7,9 +7,11 @@ from __future__ import absolute_import, unicode_literals
 from datetime import datetime
 
 import pytz
+from crum import get_current_user
 from django.core.exceptions import ObjectDoesNotExist
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from six import text_type
+
 
 # Public Grades Modules
 from lms.djangoapps.grades import constants, context, course_data, events
@@ -40,7 +42,7 @@ def graded_subsections_for_course_id(course_id):
 
 def override_subsection_grade(
         user_id, course_key_or_id, usage_key_or_id, overrider=None, earned_all=None, earned_graded=None,
-        feature=constants.GradeOverrideFeatureEnum.proctoring
+        feature=constants.GradeOverrideFeatureEnum.proctoring, comment=None,
 ):
     """
     Creates a PersistentSubsectionGradeOverride corresponding to the given
@@ -68,6 +70,7 @@ def override_subsection_grade(
         system=feature,
         earned_all_override=earned_all,
         earned_graded_override=earned_graded,
+        comment=comment,
     )
 
     # Cache a new event id and event type which the signal handler will use to emit a tracking log event.
