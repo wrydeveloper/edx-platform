@@ -121,8 +121,11 @@ def _user_already_linked_message(program_enrollment, user):
 
 
 def _validate_inputs(program_uuid, external_keys_to_usernames):
-    if None in external_keys_to_usernames or None in external_keys_to_usernames.values():
-        raise ValueError('external_user_key or username cannot be None')
+    """ Raise ValueError if inputs are bad. """
+    if not all(external_keys_to_usernames):
+        raise ValueError('external_user_key cannot be blank')
+    if not all(external_keys_to_usernames.values()):
+        raise ValueError('username cannot be blank')
     UUID(str(program_uuid))  # raises ValueError if invalid
 
 
