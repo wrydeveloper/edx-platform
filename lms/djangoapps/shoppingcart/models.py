@@ -10,7 +10,6 @@ import smtplib
 from collections import namedtuple
 from datetime import datetime, timedelta
 from decimal import Decimal
-from io import BytesIO
 
 import pytz
 import six
