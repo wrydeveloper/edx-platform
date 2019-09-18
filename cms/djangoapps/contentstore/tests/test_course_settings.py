@@ -275,7 +275,6 @@ class CourseDetailsViewTest(CourseTestCase, MilestonesTestCaseMixin):
             self.assertContains(response, "Enrollment End Date")
 
             self.assertContains(response, "Introducing Your Course")
-            self.assertContains(response, "Course Card Image")
             self.assertContains(response, "Course Short Description")
             self.assertNotContains(response, "Course About Sidebar HTML")
             self.assertNotContains(response, "Course Title")
